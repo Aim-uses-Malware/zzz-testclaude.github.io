@@ -1,7 +1,7 @@
-# ⚡ HOLLOW // SIGNAL — Fan Site
+# ⚡ HOLLOW // SIGNAL — Fan Site // AI SLOP WARNING!!
 
 > **Неофициальный фан-сайт, вдохновлённый игрой Zenless Zone Zero.**  
-> This is an unofficial fan project. Not affiliated with HoYoverse or miHoYo in any way.
+> This is an unofficial fan project. Not affiliated with HoYoverse or miHoYo in any way. [Vist](https://aim-uses-malware.github.io/zzz-testclaude.github.io/)
 
 ---
 
