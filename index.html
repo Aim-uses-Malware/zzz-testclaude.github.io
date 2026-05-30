@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HOLLOW // SIGNAL</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --y:#FFD200;--o:#FF6B00;--c:#00F0FF;--r:#FF003C;
+    --bg:#0A0A0F;--bg2:#12121A;--bg3:#1A1A26;
+    --glow:0 0 20px #FFD20066;--cglow:0 0 20px #00F0FF66;
+  }
+
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:#fff;
+    font-family:'Share Tech Mono',monospace;
+    overflow-x:hidden;
+    cursor:none;
+  }
+
+  /* CUSTOM CURSOR */
+  #cursor{position:fixed;z-index:9999;pointer-events:none;transition:transform .1s;}
+  #cursor-dot{width:8px;height:8px;background:var(--y);border-radius:50%;position:fixed;transform:translate(-50%,-50%);z-index:9999;pointer-events:none;}
+  #cursor-ring{width:32px;height:32px;border:1.5px solid var(--y);border-radius:50%;position:fixed;transform:translate(-50%,-50%);z-index:9998;pointer-events:none;transition:all .12s ease;opacity:.6;}
+  body:hover #cursor-ring{opacity:1;}
+
+  /* NOISE OVERLAY */
+  body::before{
+    content:'';position:fixed;inset:0;z-index:1;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none;opacity:.4;
+  }
+
+  /* SCANLINES */
+  body::after{
+    content:'';position:fixed;inset:0;z-index:2;pointer-events:none;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);
+  }
+
+  /* HERO SECTION */
+  .hero{
+    min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    position:relative;overflow:hidden;z-index:3;
+    padding:2rem;
+  }
+
+  .hero-bg{
+    position:absolute;inset:0;
+    background:radial-gradient(ellipse 80% 60% at 50% 40%,#FFD20010 0%,transparent 70%),
+              radial-gradient(ellipse 40% 40% at 20% 80%,#FF6B0010 0%,transparent 60%),
+              radial-gradient(ellipse 40% 40% at 80% 20%,#00F0FF08 0%,transparent 60%);
+    z-index:-1;
+  }
+
+  /* DIAGONAL STRIPES */
+  .hero-bg::before{
+    content:'';position:absolute;inset:0;
+    background:repeating-linear-gradient(
+      -45deg,transparent,transparent 40px,
+      rgba(255,210,0,.015) 40px,rgba(255,210,0,.015) 41px
+    );
+  }
+
+  .badge{
+    font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.3em;
+    border:1px solid var(--y);color:var(--y);padding:.3rem .8rem;
+    margin-bottom:1.5rem;
+    animation:badgePulse 3s infinite;
+    position:relative;overflow:hidden;
+  }
+  .badge::before{
+    content:'';position:absolute;left:-100%;top:0;width:60%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,210,0,.2),transparent);
+    animation:shine 3s infinite 1s;
+  }
+  @keyframes shine{0%{left:-100%}100%{left:200%}}
+  @keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 #FFD20033}50%{box-shadow:0 0 0 4px #FFD20033}}
+
+  .hero-title{
+    font-family:'Bebas Neue',cursive;
+    font-size:clamp(4rem,15vw,10rem);
+    line-height:.9;text-align:center;
+    position:relative;
+    letter-spacing:.05em;
+  }
+  .hero-title .line1{
+    color:var(--y);
+    text-shadow:0 0 40px #FFD20066,0 0 80px #FFD20033;
+    display:block;
+    animation:titleGlitch 8s infinite;
+  }
+  .hero-title .line2{
+    color:#fff;opacity:.12;
+    font-size:clamp(2rem,8vw,5rem);
+    display:block;letter-spacing:.3em;
+  }
+  @keyframes titleGlitch{
+    0%,90%,100%{clip-path:none;transform:translate(0)}
+    91%{clip-path:polygon(0 20%,100% 20%,100% 40%,0 40%);transform:translate(-3px,0);filter:hue-rotate(90deg)}
+    92%{clip-path:polygon(0 60%,100% 60%,100% 80%,0 80%);transform:translate(3px,0)}
+    93%{clip-path:none;transform:translate(0);filter:none}
+  }
+
+  .hero-sub{
+    font-family:'Orbitron',monospace;font-size:.75rem;
+    letter-spacing:.2em;color:rgba(255,255,255,.4);
+    margin-top:1.5rem;text-align:center;
+  }
+  .hero-sub span{color:var(--c);animation:blink 1.5s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+  .scroll-hint{
+    position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);
+    font-size:.6rem;letter-spacing:.2em;color:rgba(255,255,255,.2);
+    display:flex;flex-direction:column;align-items:center;gap:.5rem;
+  }
+  .scroll-hint::after{
+    content:'';width:1px;height:40px;
+    background:linear-gradient(to bottom,var(--y),transparent);
+    animation:scrollLine 2s infinite;
+  }
+  @keyframes scrollLine{0%{opacity:0;transform:scaleY(0)}50%{opacity:1}100%{opacity:0;transform:scaleY(1)}}
+
+  /* SECTION WRAPPER */
+  section{z-index:3;position:relative;padding:6rem 2rem;}
+  .container{max-width:1200px;margin:0 auto;}
+
+  .section-label{
+    font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.4em;
+    color:var(--y);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;
+  }
+  .section-label::before{content:'//';opacity:.5;}
+
+  .section-title{
+    font-family:'Bebas Neue',cursive;font-size:clamp(2.5rem,6vw,4.5rem);
+    line-height:1;margin-bottom:3rem;
+    background:linear-gradient(135deg,#fff 40%,rgba(255,255,255,.3));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+
+  /* TILT CARDS */
+  .cards-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:1.5rem;
+  }
+
+  .tilt-card{
+    position:relative;border-radius:4px;
+    background:var(--bg2);
+    border:1px solid rgba(255,210,0,.15);
+    padding:2rem;overflow:hidden;
+    transform-style:preserve-3d;
+    transition:border-color .3s,box-shadow .3s;
+    cursor:none;
+  }
+  .tilt-card::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,210,0,.06) 0%,transparent 60%);
+    opacity:0;transition:opacity .3s;
+  }
+  .tilt-card:hover::before{opacity:1;}
+  .tilt-card:hover{
+    border-color:rgba(255,210,0,.5);
+    box-shadow:0 0 30px rgba(255,210,0,.1),0 20px 60px rgba(0,0,0,.5);
+  }
+
+  .card-accent{
+    width:3rem;height:3px;background:var(--y);margin-bottom:1.5rem;
+    position:relative;overflow:hidden;
+  }
+  .card-accent::after{
+    content:'';position:absolute;left:-100%;top:0;width:100%;height:100%;
+    background:rgba(255,255,255,.5);
+    animation:accentSlide 3s infinite;
+  }
+  @keyframes accentSlide{0%{left:-100%}100%{left:200%}}
+
+  .card-num{
+    font-family:'Orbitron',monospace;font-size:3rem;font-weight:900;
+    color:rgba(255,255,255,.04);position:absolute;top:.5rem;right:1rem;
+    line-height:1;
+  }
+
+  .card-title{
+    font-family:'Bebas Neue',cursive;font-size:1.6rem;letter-spacing:.05em;
+    color:#fff;margin-bottom:.75rem;
+    transform:translateZ(20px);
+  }
+  .card-text{
+    font-size:.75rem;line-height:1.7;color:rgba(255,255,255,.45);
+    transform:translateZ(10px);
+  }
+  .card-tag{
+    display:inline-block;margin-top:1rem;padding:.2rem .6rem;
+    font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:.15em;
+    border:1px solid;transform:translateZ(15px);
+  }
+  .card-tag.yellow{border-color:var(--y);color:var(--y);}
+  .card-tag.cyan{border-color:var(--c);color:var(--c);}
+  .card-tag.red{border-color:var(--r);color:var(--r);}
+
+  /* JOKE SECTION */
+  .joke-section{
+    background:var(--bg2);
+    border-top:1px solid rgba(255,210,0,.1);
+    border-bottom:1px solid rgba(255,210,0,.1);
+  }
+
+  .jokes-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:1.5rem;
+  }
+
+  .joke-card{
+    background:var(--bg3);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:2px;
+    padding:1.75rem;position:relative;overflow:hidden;
+    transition:transform .3s cubic-bezier(.23,1,.32,1),border-color .3s,box-shadow .3s;
+  }
+  .joke-card:hover{
+    transform:translateY(-6px);
+    border-color:rgba(0,240,255,.3);
+    box-shadow:0 20px 50px rgba(0,0,0,.4),0 0 30px rgba(0,240,255,.06);
+  }
+
+  .joke-number{
+    font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:.2em;
+    color:var(--c);margin-bottom:1rem;
+    display:flex;align-items:center;gap:.5rem;
+  }
+  .joke-number::after{content:'';flex:1;height:1px;background:rgba(0,240,255,.2);}
+
+  .joke-setup{
+    font-family:'Bebas Neue',cursive;font-size:1.3rem;letter-spacing:.05em;
+    color:#fff;margin-bottom:.5rem;line-height:1.2;
+  }
+
+  .joke-punchline{
+    font-size:.75rem;color:rgba(255,255,255,.4);line-height:1.6;
+    max-height:0;overflow:hidden;
+    transition:max-height .6s cubic-bezier(.23,1,.32,1),opacity .4s;
+    opacity:0;
+  }
+  .joke-card:hover .joke-punchline,
+  .joke-card.revealed .joke-punchline{
+    max-height:200px;opacity:1;
+  }
+
+  .joke-reveal-hint{
+    font-family:'Orbitron',monospace;font-size:.5rem;letter-spacing:.2em;
+    color:rgba(255,210,0,.3);margin-top:.75rem;
+    transition:opacity .3s;
+  }
+  .joke-card:hover .joke-reveal-hint{opacity:0;}
+
+  .joke-punchline strong{color:var(--y);}
+
+  /* MARQUEE */
+  .marquee-wrap{overflow:hidden;border-top:1px solid rgba(255,210,0,.1);border-bottom:1px solid rgba(255,210,0,.1);padding:.4rem 0;}
+  .marquee-inner{display:flex;gap:3rem;width:max-content;animation:marquee 30s linear infinite;}
+  .marquee-item{font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.2em;color:rgba(255,255,255,.2);white-space:nowrap;}
+  .marquee-item span{color:var(--y);}
+  @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+  /* STATS BAR */
+  .stats-bar{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:1px;background:rgba(255,210,0,.1);
+    border:1px solid rgba(255,210,0,.1);margin-bottom:4rem;
+  }
+  .stat-item{
+    background:var(--bg2);padding:1.5rem;text-align:center;
+    transition:background .3s;
+  }
+  .stat-item:hover{background:var(--bg3);}
+  .stat-num{
+    font-family:'Bebas Neue',cursive;font-size:2.5rem;color:var(--y);
+    text-shadow:var(--glow);display:block;
+  }
+  .stat-label{font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:.2em;color:rgba(255,255,255,.3);}
+
+  /* TERMINAL BLOCK */
+  .terminal{
+    background:#000;border:1px solid rgba(255,210,0,.2);
+    padding:1.5rem;font-size:.75rem;line-height:1.9;
+    position:relative;overflow:hidden;
+    border-radius:2px;
+  }
+  .terminal::before{
+    content:'HOLLOW CORP // SIGNAL TERMINAL';
+    position:absolute;top:0;left:0;right:0;
+    background:rgba(255,210,0,.1);
+    color:var(--y);font-family:'Orbitron',monospace;font-size:.55rem;
+    letter-spacing:.2em;padding:.4rem 1rem;
+    border-bottom:1px solid rgba(255,210,0,.2);
+  }
+  .terminal{padding-top:2.5rem;}
+
+  .t-line{display:block;animation:typeIn .5s ease forwards;opacity:0;}
+  .t-line:nth-child(1){animation-delay:.5s}
+  .t-line:nth-child(2){animation-delay:1.1s}
+  .t-line:nth-child(3){animation-delay:1.7s}
+  .t-line:nth-child(4){animation-delay:2.3s}
+  .t-line:nth-child(5){animation-delay:2.9s}
+  .t-line:nth-child(6){animation-delay:3.5s}
+  @keyframes typeIn{0%{opacity:0;transform:translateX(-4px)}100%{opacity:1;transform:none}}
+
+  .t-p{color:rgba(255,255,255,.3);}
+  .t-y{color:var(--y);}
+  .t-c{color:var(--c);}
+  .t-r{color:var(--r);}
+  .t-g{color:#39FF6A;}
+
+  /* GLITCH TEXT */
+  .glitch{position:relative;display:inline-block;}
+  .glitch::before,.glitch::after{
+    content:attr(data-text);position:absolute;top:0;left:0;
+    width:100%;height:100%;
+  }
+  .glitch::before{
+    color:var(--c);animation:glitchTop 4s infinite;
+    clip-path:polygon(0 0,100% 0,100% 40%,0 40%);
+  }
+  .glitch::after{
+    color:var(--r);animation:glitchBot 4s infinite;
+    clip-path:polygon(0 60%,100% 60%,100% 100%,0 100%);
+  }
+  @keyframes glitchTop{
+    0%,80%,100%{transform:translate(0);opacity:0}
+    82%{transform:translate(-2px,0);opacity:.8}
+    84%{transform:translate(2px,0);opacity:.8}
+    86%{opacity:0}
+  }
+  @keyframes glitchBot{
+    0%,85%,100%{transform:translate(0);opacity:0}
+    87%{transform:translate(2px,0);opacity:.8}
+    89%{transform:translate(-2px,0);opacity:.8}
+    91%{opacity:0}
+  }
+
+  /* DIVIDER */
+  .divider{
+    display:flex;align-items:center;gap:1rem;
+    margin:4rem 0;
+  }
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,210,0,.15);}
+  .divider-icon{
+    font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.2em;
+    color:rgba(255,210,0,.3);white-space:nowrap;
+  }
+
+  /* FOOTER */
+  footer{
+    z-index:3;position:relative;
+    border-top:1px solid rgba(255,210,0,.1);
+    padding:3rem 2rem;text-align:center;
+  }
+  footer p{font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:.2em;color:rgba(255,255,255,.15);}
+  footer span{color:var(--y);}
+
+  /* BG GRID */
+  .bg-grid{
+    position:fixed;inset:0;z-index:0;
+    background-image:
+      linear-gradient(rgba(255,210,0,.03) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,210,0,.03) 1px,transparent 1px);
+    background-size:60px 60px;
+    pointer-events:none;
+  }
+
+  /* PARTICLES */
+  #particles{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+  .particle{
+    position:absolute;width:2px;height:2px;
+    border-radius:50%;background:var(--y);
+    animation:float linear infinite;
+    opacity:0;
+  }
+  @keyframes float{
+    0%{opacity:0;transform:translateY(100vh) translateX(0)}
+    10%{opacity:.6}
+    90%{opacity:.2}
+    100%{opacity:0;transform:translateY(-20px) translateX(var(--dx))}
+  }
+
+  /* HERO LINES */
+  .hero-lines{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+  .h-line{
+    position:absolute;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,210,0,.08),transparent);
+  }
+  .h-line:nth-child(1){top:25%;animation:hLineScan 7s 0s infinite;}
+  .h-line:nth-child(2){top:60%;animation:hLineScan 7s 2s infinite;}
+  .h-line:nth-child(3){top:80%;animation:hLineScan 7s 4s infinite;}
+  @keyframes hLineScan{
+    0%{opacity:0;transform:translateY(-20px)}
+    20%{opacity:1}
+    80%{opacity:.3}
+    100%{opacity:0;transform:translateY(20px)}
+  }
+
+  /* CORNER DECORATIONS */
+  .corner-tl,.corner-br{position:fixed;z-index:4;pointer-events:none;}
+  .corner-tl{top:1.5rem;left:1.5rem;}
+  .corner-br{bottom:1.5rem;right:1.5rem;}
+  .corner-mark{
+    width:20px;height:20px;
+    border-color:rgba(255,210,0,.3);
+    border-style:solid;
+  }
+  .corner-tl .corner-mark{border-width:1px 0 0 1px;}
+  .corner-br .corner-mark{border-width:0 1px 1px 0;}
+  .corner-label{
+    font-family:'Orbitron',monospace;font-size:.45rem;letter-spacing:.2em;
+    color:rgba(255,210,0,.2);margin-top:.3rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- DECORATIVE CORNERS -->
+<div class="corner-tl">
+  <div class="corner-mark"></div>
+  <div class="corner-label">SYS.ACTIVE</div>
+</div>
+<div class="corner-br">
+  <div class="corner-mark"></div>
+</div>
+
+<!-- BG -->
+<div class="bg-grid"></div>
+<div id="particles"></div>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap" style="position:relative;z-index:3;">
+  <div class="marquee-inner" id="mq">
+    <span class="marquee-item">HOLLOW CORP <span>///</span></span>
+    <span class="marquee-item">SIGNAL_LOST <span>■</span></span>
+    <span class="marquee-item">PROXY [NULL] <span>///</span></span>
+    <span class="marquee-item">ZENLESS PROTOCOL <span>■</span></span>
+    <span class="marquee-item">ERIDU_SYS <span>///</span></span>
+    <span class="marquee-item">ANOMALY_DETECTED <span>■</span></span>
+    <span class="marquee-item">BANGBOO_ONLINE <span>///</span></span>
+    <span class="marquee-item">HOLLOW CORP <span>///</span></span>
+    <span class="marquee-item">SIGNAL_LOST <span>■</span></span>
+    <span class="marquee-item">PROXY [NULL] <span>///</span></span>
+    <span class="marquee-item">ZENLESS PROTOCOL <span>■</span></span>
+    <span class="marquee-item">ERIDU_SYS <span>///</span></span>
+    <span class="marquee-item">ANOMALY_DETECTED <span>■</span></span>
+    <span class="marquee-item">BANGBOO_ONLINE <span>///</span></span>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-lines">
+    <div class="h-line"></div>
+    <div class="h-line"></div>
+    <div class="h-line"></div>
+  </div>
+
+  <div class="badge">// HOLLOW SIGNAL v4.2.1 //</div>
+
+  <h1 class="hero-title">
+    <span class="line1 glitch" data-text="ZENLESS">ZENLESS</span>
+    <span class="line2">ZONE ZERO</span>
+  </h1>
+
+  <p class="hero-sub">
+    ERIDU CITY / 2080 / <span>█</span> SIGNAL INTERCEPTED
+  </p>
+
+  <div class="scroll-hint">SCROLL DOWN</div>
+</section>
+
+<!-- STATS -->
+<section style="padding:3rem 2rem 0;z-index:3;position:relative;">
+  <div class="container">
+    <div class="stats-bar">
+      <div class="stat-item"><span class="stat-num">2080</span><span class="stat-label">YEAR</span></div>
+      <div class="stat-item"><span class="stat-num">99.9%</span><span class="stat-label">ANOMALY RATE</span></div>
+      <div class="stat-item"><span class="stat-num">7</span><span class="stat-label">FACTIONS</span></div>
+      <div class="stat-item"><span class="stat-num">∞</span><span class="stat-label">HOLLOWS</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CARDS SECTION -->
+<section style="padding:4rem 2rem;z-index:3;position:relative;">
+  <div class="container">
+    <div class="section-label">AGENTS DATABASE</div>
+    <h2 class="section-title">ВЫБЕРИ СВОЙ КЛАСС</h2>
+    <div class="cards-grid">
+
+      <div class="tilt-card" data-tilt>
+        <div class="card-num">01</div>
+        <div class="card-accent"></div>
+        <div class="card-title">БЛИЖНИЙ БОЙ</div>
+        <p class="card-text">Врываешься в толпу врагов как будто у тебя там назначена встреча. И ты опоздал на три этажа выше.</p>
+        <span class="card-tag yellow">STRIKE // MELEE</span>
+      </div>
+
+      <div class="tilt-card" data-tilt>
+        <div class="card-num">02</div>
+        <div class="card-accent"></div>
+        <div class="card-title">ДАЛЬНИЙ СТРЕЛОК</div>
+        <p class="card-text">Стоишь в углу, делаешь вид что думаешь. На самом деле просто боишься подойти ближе.</p>
+        <span class="card-tag cyan">SNIPE // RANGE</span>
+      </div>
+
+      <div class="tilt-card" data-tilt>
+        <div class="card-num">03</div>
+        <div class="card-accent"></div>
+        <div class="card-title">ПОДДЕРЖКА</div>
+        <p class="card-text">Лечишь команду пока они делают глупости. Скоро и сам начнёшь делать глупости — от усталости.</p>
+        <span class="card-tag red">SUPPORT // HEAL</span>
+      </div>
+
+      <div class="tilt-card" data-tilt>
+        <div class="card-num">04</div>
+        <div class="card-accent"></div>
+        <div class="card-title">АНОМАЛЬЩИК</div>
+        <p class="card-text">Физика? Не слышал. Реальность? Личное дело. Враги горят, замерзают и взрываются одновременно.</p>
+        <span class="card-tag yellow">ANOMALY // CHAOS</span>
+      </div>
+
+      <div class="tilt-card" data-tilt>
+        <div class="card-num">05</div>
+        <div class="card-accent"></div>
+        <div class="card-title">ПЕРЕХВАТЧИК</div>
+        <p class="card-text">Блокируешь атаки в последний момент. Зрелищно. Потому что первые 100 раз ты их не заблокировал.</p>
+        <span class="card-tag cyan">INTERCEPT // STUN</span>
+      </div>
+
+      <div class="tilt-card" data-tilt>
+        <div class="card-num">06</div>
+        <div class="card-accent"></div>
+        <div class="card-title">БЭНГБУ</div>
+        <p class="card-text">Маленький. Пушистый. Смертельно опасный. Хочет крабовые палочки. Никто не знает откуда он взялся.</p>
+        <span class="card-tag red">BANGBOO // ???</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- JOKES SECTION -->
+<section class="joke-section" style="padding:5rem 2rem;z-index:3;position:relative;">
+  <div class="container">
+    <div class="section-label">HOLLOW HUMOR</div>
+    <h2 class="section-title">ШУТКИ ИЗ ПОЛОСТИ</h2>
+    <p style="font-size:.7rem;color:rgba(255,255,255,.25);margin-bottom:3rem;letter-spacing:.1em;">// наведи курсор чтобы узнать панчлайн //</p>
+    <div class="jokes-grid">
+
+      <div class="joke-card">
+        <div class="joke-number">JOKE.001</div>
+        <div class="joke-setup">Почему Прокси никогда не опаздывает в Полость?</div>
+        <div class="joke-punchline">Потому что время в Полости идёт как угодно. <strong>Прокси просто притворяется что так и задумано.</strong></div>
+        <div class="joke-reveal-hint">// HOVER TO REVEAL //</div>
+      </div>
+
+      <div class="joke-card">
+        <div class="joke-number">JOKE.002</div>
+        <div class="joke-setup">Как Бэнгбу объясняет свою боевую тактику?</div>
+        <div class="joke-punchline">"Я просто <strong>иду туда где больно.</strong> Обычно это середина." — Бэнгбу, вероятно.</div>
+        <div class="joke-reveal-hint">// HOVER TO REVEAL //</div>
+      </div>
+
+      <div class="joke-card">
+        <div class="joke-number">JOKE.003</div>
+        <div class="joke-setup">Что говорит агент поддержки когда умирает первым?</div>
+        <div class="joke-punchline">"Это <strong>стратегический отход.</strong>" Команда молчит. Никто не верит.</div>
+        <div class="joke-reveal-hint">// HOVER TO REVEAL //</div>
+      </div>
+
+      <div class="joke-card">
+        <div class="joke-number">JOKE.004</div>
+        <div class="joke-setup">Сколько агентов нужно чтобы вкрутить лампочку в Полости?</div>
+        <div class="joke-punchline">Один — но он сначала <strong>три раза умрёт,</strong> потом купит S-ранг лампочку за реальные деньги.</div>
+        <div class="joke-reveal-hint">// HOVER TO REVEAL //</div>
+      </div>
+
+      <div class="joke-card">
+        <div class="joke-number">JOKE.005</div>
+        <div class="joke-setup">Почему у снайпера всегда полный маг?</div>
+        <div class="joke-punchline">Потому что он стоит <strong>так далеко,</strong> что враги его уже не помнят. Он тоже уже не помнит зачем пришёл.</div>
+        <div class="joke-reveal-hint">// HOVER TO REVEAL //</div>
+      </div>
+
+      <div class="joke-card">
+        <div class="joke-number">JOKE.006</div>
+        <div class="joke-setup">Что общего между Hollow и разработчиком игр?</div>
+        <div class="joke-punchline">Оба затягивают тебя внутрь, <strong>не отпускают,</strong> и обещают что "контент будет в следующем патче".</div>
+        <div class="joke-reveal-hint">// HOVER TO REVEAL //</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL -->
+<section style="padding:3rem 2rem 5rem;z-index:3;position:relative;">
+  <div class="container">
+    <div class="divider"><span class="divider-icon">◆ SYSTEM_LOG ◆</span></div>
+    <div class="terminal">
+      <span class="t-line"><span class="t-p">[02:47:12]</span> <span class="t-y">ERIDU_NET //</span> Подключение к Полости установлено</span>
+      <span class="t-line"><span class="t-p">[02:47:13]</span> <span class="t-c">BANGBOO_UNIT_007 //</span> Обнаружен в холодильнике. Снова.</span>
+      <span class="t-line"><span class="t-p">[02:47:15]</span> <span class="t-r">ANOMALY //</span> Физика нарушена в секторе 7-G. Причина неизвестна.</span>
+      <span class="t-line"><span class="t-p">[02:47:18]</span> <span class="t-g">PROXY_SIGNAL //</span> Новый агент авторизован. Добро пожаловать, Прокси.</span>
+      <span class="t-line"><span class="t-p">[02:47:20]</span> <span class="t-y">SYSTEM //</span> Предупреждение: уровень крабовых палочек критически низкий</span>
+      <span class="t-line"><span class="t-p">[02:47:22]</span> <span class="t-c">BANGBOO_UNIT_007 //</span> ЭТО НЕ Я. (это я)</span>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>HOLLOW CORP © 2080 / ERIDU CITY / <span>ALL ANOMALIES ARE NORMAL</span></p>
+  <p style="margin-top:.5rem">MADE BY <span>AIMRITE2</span> // ZZZ FAN SITE // NOT OFFICIAL</p>
+</footer>
+
+<script>
+// CURSOR
+const dot = document.getElementById('cursor-dot');
+const ring = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  dot.style.left=mx+'px';dot.style.top=my+'px';
+});
+function lerp(a,b,t){return a+(b-a)*t;}
+function animCursor(){
+  rx=lerp(rx,mx,.15);ry=lerp(ry,my,.15);
+  ring.style.left=rx+'px';ring.style.top=ry+'px';
+  requestAnimationFrame(animCursor);
+}
+animCursor();
+
+// TILT CARDS
+document.querySelectorAll('[data-tilt]').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width;
+    const y=(e.clientY-r.top)/r.height;
+    const rx=(y-.5)*12;const ry=(x-.5)*-12;
+    card.style.transform=`perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(8px)`;
+    card.style.setProperty('--mx',(x*100)+'%');
+    card.style.setProperty('--my',(y*100)+'%');
+  });
+  card.addEventListener('mouseleave',()=>{
+    card.style.transform='perspective(600px) rotateX(0) rotateY(0) translateZ(0)';
+  });
+  // cursor ring enlarge on card hover
+  card.addEventListener('mouseenter',()=>{ring.style.transform='translate(-50%,-50%) scale(1.8)';ring.style.borderColor='#FFD200';});
+  card.addEventListener('mouseleave',()=>{ring.style.transform='translate(-50%,-50%) scale(1)';ring.style.borderColor='';});
+});
+
+// JOKE CARDS - click to toggle on mobile
+document.querySelectorAll('.joke-card').forEach(card=>{
+  card.addEventListener('click',()=>card.classList.toggle('revealed'));
+});
+
+// PARTICLES
+const pContainer=document.getElementById('particles');
+function spawnParticle(){
+  const p=document.createElement('div');
+  p.className='particle';
+  const x=Math.random()*100;
+  const dur=6+Math.random()*10;
+  const delay=Math.random()*4;
+  const dx=(Math.random()-.5)*100+'px';
+  p.style.cssText=`left:${x}%;--dx:${dx};animation-duration:${dur}s;animation-delay:${delay}s;`;
+  if(Math.random()>.7)p.style.background='#00F0FF';
+  pContainer.appendChild(p);
+  setTimeout(()=>p.remove(),(dur+delay)*1000+500);
+}
+for(let i=0;i<30;i++)spawnParticle();
+setInterval(spawnParticle,600);
+
+// INTERSECTION OBSERVER for section fade
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';}
+  });
+},{threshold:.1});
+document.querySelectorAll('.tilt-card,.joke-card,.stat-item').forEach(el=>{
+  el.style.opacity='0';el.style.transform='translateY(20px)';
+  el.style.transition='opacity .6s ease, transform .6s ease';
+  obs.observe(el);
+});
+</script>
+</body>
+</html>
